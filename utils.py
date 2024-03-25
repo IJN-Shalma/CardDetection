@@ -2,6 +2,7 @@ import os
 import shutil
 import random
 from tqdm import tqdm
+from ultralytics import YOLO
 
 import requests
 from dotenv import load_dotenv
@@ -24,6 +25,7 @@ def build_model(set_id):
     if set_id == "sv4pt5":  # Testing
         labels = download_set_cards_images(set_id)
         split_data(set_id, labels)
+        yolo_train(set_id)
 
 
 '''
@@ -32,7 +34,7 @@ def build_model(set_id):
 
 
 def download_set_cards_images(set_id):
-    response = requests.get("https://api.pokemontcg.io/v2/cards?q=set.id:sv4pt5", headers=headers)
+    response = requests.get("https://api.pokemontcg.io/v2/cards?q=set.id:" + set_id, headers=headers)
     if response.status_code == 200:
         if not os.path.exists(os.path.join("card_sets", set_id)):
             os.makedirs(os.path.join("card_sets", set_id))
@@ -58,6 +60,16 @@ def download_file(set, url, card_id):
 '''
     AI Training functions
 '''
+
+
+def yolo_train(set_id):
+    model = YOLO('models/yolov8l.pt')
+
+    results = model.train(
+        data=os.path.join("card_sets", set_id, "data.yaml"),
+        epochs=10,
+        batch=8,
+        name=set_id)
 
 
 def split_data(set_id, labels):
@@ -103,7 +115,7 @@ def create_image_label_file(set_id, file_name, label):
 
 def generate_data_yaml(set_id, labels):
     with open(os.path.join("card_sets", set_id, "data.yaml"), 'w') as f:
-        f.write("path: " + set_id + "/\n")
+        f.write("path: " + set_id + "/\n")  # Fix output path with current CWD
         f.write("train: train/images\n")
         f.write("val: valid/images\n")
         f.write("test: test/images\n")
