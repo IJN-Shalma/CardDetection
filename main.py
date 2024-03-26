@@ -1,10 +1,5 @@
 import utils
+import cv2
 
-
-def main():
-    # utils.build_models()
-    utils.yolo_train("sv4pt5")
-
-
-if __name__ == '__main__':
-    main()
+image = cv2.imread("test/R.jpg")
+utils.find_cards_in_image(image)
